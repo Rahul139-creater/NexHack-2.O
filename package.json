@@ -1,0 +1,23 @@
+{
+  "name": "team-kb-harness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "packages/*",
+    "adapters/*",
+    "client"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "node scripts/seed.js",
+    "demo": "node scripts/demo-handover.js"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.3",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}
