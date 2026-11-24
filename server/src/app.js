@@ -4,6 +4,9 @@ import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { recordsRouter } from './routes/records.js';
 import { tasksRouter } from './routes/tasks.js';
+import { flagsRouter } from './routes/flags.js';
+import { traceRouter } from './routes/trace.js';
+import { eventsRouter } from './routes/events.js';
 
 export function createApp() {
   const app = express();
@@ -23,6 +26,9 @@ export function createApp() {
   // Mount routes
   apiRouter.use('/records', recordsRouter);
   apiRouter.use('/tasks', tasksRouter);
+  apiRouter.use('/flags', flagsRouter);
+  apiRouter.use('/trace', traceRouter);
+  apiRouter.use('/events', eventsRouter);
 
   // Future routes (tasks, flags, trace, events) will be mounted here
   app.use('/api', apiRouter);

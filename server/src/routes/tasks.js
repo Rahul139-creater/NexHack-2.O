@@ -79,7 +79,7 @@ tasksRouter.get('/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/tasks/:id/claim - claim task (allowed only from open or stale)
+// POST /api/tasks/:id/claim - claim task (allowed from open, stale, or expired claimed lease)
 tasksRouter.post('/:id/claim', async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -88,16 +88,32 @@ tasksRouter.post('/:id/claim', async (req, res, next) => {
       throw notFound(`Task ${id} not found`);
     }
 
-    if (!['open', 'stale'].includes(existingTask.status)) {
+    const now = new Date();
+    const isExpiredClaimed =
+      existingTask.status === 'claimed' &&
+      existingTask.lease?.expiresAt &&
+      new Date(existingTask.lease.expiresAt) < now;
+
+    const isClaimable =
+      ['open', 'stale'].includes(existingTask.status) || isExpiredClaimed;
+
+    if (!isClaimable) {
       throw invalidState(
-        `Task ${id} is in status '${existingTask.status}'. Claim is only permitted from 'open' or 'stale'.`
+        `Task ${id} is in status '${existingTask.status}' and lease has not expired. Claim is only permitted from 'open', 'stale', or an expired lease.`
       );
     }
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const previousOwner = isExpiredClaimed ? existingTask.owner : null;
 
     const updatedTask = await Task.findOneAndUpdate(
-      { taskId: id, status: { $in: ['open', 'stale'] } },
+      {
+        taskId: id,
+        $or: [
+          { status: { $in: ['open', 'stale'] } },
+          { status: 'claimed', 'lease.expiresAt': { $lt: now } }
+        ]
+      },
       {
         $set: {
           owner: req.user.userId,
@@ -114,14 +130,17 @@ tasksRouter.post('/:id/claim', async (req, res, next) => {
       throw invalidState(`Task ${id} could not be claimed; state changed concurrently`);
     }
 
+    const action = isExpiredClaimed ? 'reclaim_expired_lease' : 'claim_task';
+
     await recordAudit({
       actor: req.user.userId,
       tool: req.user.tool || 'api',
-      action: 'claim_task',
+      action,
       taskId: id,
       meta: {
         fencingToken: updatedTask.fencingToken,
-        leaseExpiresAt: expiresAt
+        leaseExpiresAt: expiresAt,
+        ...(previousOwner ? { previousOwner } : {})
       }
     });
 
