@@ -3,6 +3,7 @@ import cors from 'cors';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { recordsRouter } from './routes/records.js';
+import { tasksRouter } from './routes/tasks.js';
 
 export function createApp() {
   const app = express();
@@ -19,8 +20,9 @@ export function createApp() {
   const apiRouter = express.Router();
   apiRouter.use(requireAuth);
 
-  // Mount records routes
+  // Mount routes
   apiRouter.use('/records', recordsRouter);
+  apiRouter.use('/tasks', tasksRouter);
 
   // Future routes (tasks, flags, trace, events) will be mounted here
   app.use('/api', apiRouter);
