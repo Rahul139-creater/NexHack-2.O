@@ -120,7 +120,7 @@ flagsRouter.post('/:id/approve', async (req, res, next) => {
     // Exactly one audit event
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'approve_review_flag',
       taskId: updatedFlag.taskId,
       meta: {
@@ -173,7 +173,7 @@ flagsRouter.post('/:id/reject', async (req, res, next) => {
 
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'reject_review_flag',
       taskId: updatedFlag.taskId,
       meta: {

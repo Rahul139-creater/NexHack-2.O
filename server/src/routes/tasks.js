@@ -52,7 +52,7 @@ tasksRouter.post('/', validate(createTaskSchema), async (req, res, next) => {
 
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'create_task',
       taskId,
       recordRefs: [briefRef, ...(dependsOn || [])],
@@ -117,7 +117,7 @@ tasksRouter.post('/:id/claim', async (req, res, next) => {
       {
         $set: {
           owner: req.user.userId,
-          tool: req.user.tool || 'api',
+          tool: req.tool,
           'lease.expiresAt': expiresAt,
           status: 'claimed'
         },
@@ -134,7 +134,7 @@ tasksRouter.post('/:id/claim', async (req, res, next) => {
 
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action,
       taskId: id,
       meta: {
@@ -232,7 +232,7 @@ tasksRouter.post('/:id/result', validate(submitResultSchema), async (req, res, n
       body: typeof body === 'string' ? body : JSON.stringify(body),
       citations,
       createdBy: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       applied: false
     });
 
@@ -244,7 +244,7 @@ tasksRouter.post('/:id/result', validate(submitResultSchema), async (req, res, n
 
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'submit_result',
       taskId: id,
       recordRefs: citations,
@@ -365,7 +365,7 @@ tasksRouter.post('/:id/resume', async (req, res, next) => {
     // Exactly one completion audit event
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'complete_task',
       taskId: id,
       meta: { status: 'completed' }

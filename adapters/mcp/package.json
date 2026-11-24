@@ -5,6 +5,8 @@
   "type": "module",
   "main": "src/index.js",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.4.1"
+    "@modelcontextprotocol/sdk": "^1.4.1",
+    "@team-kb/client": "*",
+    "zod": "^3.24.1"
   }
 }

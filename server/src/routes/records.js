@@ -125,14 +125,14 @@ recordsRouter.post('/', validate(createRecordSchema), async (req, res, next) => 
       rev: 1,
       content,
       author: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       createdAt: new Date()
     });
 
     // Mandatory audit event in the same request
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'create_record',
       recordRefs: [{ recordId, rev: 1 }],
       meta: { type, recordId }
@@ -198,7 +198,7 @@ recordsRouter.put('/:id', validate(updateRecordSchema), async (req, res, next) =
       rev: newRev,
       content,
       author: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       createdAt: new Date()
     });
 
@@ -208,13 +208,13 @@ recordsRouter.put('/:id', validate(updateRecordSchema), async (req, res, next) =
       fromRev: baseRevision,
       toRev: newRev,
       actor: req.user.userId,
-      tool: req.user.tool || 'api'
+      tool: req.tool
     });
 
     // Mandatory audit event in the same request
     await recordAudit({
       actor: req.user.userId,
-      tool: req.user.tool || 'api',
+      tool: req.tool,
       action: 'update_record',
       recordRefs: [{ recordId: id, rev: newRev }],
       meta: {

@@ -22,6 +22,7 @@ export async function requireAuth(req, res, next) {
 
     req.user = user;
     req.rawToken = token;
+    req.tool = req.headers['x-kb-tool'] || user.tool || 'api';
     next();
   } catch (err) {
     next(err);

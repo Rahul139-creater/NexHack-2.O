@@ -124,4 +124,41 @@ describe('Phase 3: Audit Trail & Events Querying', () => {
     expect(recActions).toContain('create_record');
     expect(recActions).toContain('update_record');
   });
+
+  it('two requests by the same user with different X-KB-Tool values produce events with different tool labels', async () => {
+    // Request 1 with X-KB-Tool: "claude-code"
+    const res1 = await request(app)
+      .post('/api/records')
+      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('X-KB-Tool', 'claude-code')
+      .send({
+        type: 'document',
+        content: 'Created via Claude Code tool'
+      });
+    expect(res1.status).toBe(201);
+    const rec1Id = res1.body.recordId;
+
+    // Request 2 with X-KB-Tool: "antigravity"
+    const res2 = await request(app)
+      .post('/api/records')
+      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('X-KB-Tool', 'antigravity')
+      .send({
+        type: 'document',
+        content: 'Created via Antigravity tool'
+      });
+    expect(res2.status).toBe(201);
+    const rec2Id = res2.body.recordId;
+
+    // Query events for both
+    const ev1Res = await request(app)
+      .get(`/api/events?recordId=${rec1Id}`)
+      .set('Authorization', `Bearer ${aliceToken}`);
+    expect(ev1Res.body[0].tool).toBe('claude-code');
+
+    const ev2Res = await request(app)
+      .get(`/api/events?recordId=${rec2Id}`)
+      .set('Authorization', `Bearer ${aliceToken}`);
+    expect(ev2Res.body[0].tool).toBe('antigravity');
+  });
 });

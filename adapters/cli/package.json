@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "bin": {
-    "kb-cli": "./src/index.js"
+    "kb": "./src/index.js"
+  },
+  "dependencies": {
+    "@team-kb/client": "*"
   }
 }
