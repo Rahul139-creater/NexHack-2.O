@@ -23,6 +23,16 @@ export function createApp() {
   const apiRouter = express.Router();
   apiRouter.use(requireAuth);
 
+  // Current user info
+  apiRouter.get('/me', (req, res) => {
+    res.json({
+      userId: req.user.userId,
+      name: req.user.name,
+      role: req.user.role,
+      tool: req.tool || req.user.tool || 'api'
+    });
+  });
+
   // Mount routes
   apiRouter.use('/records', recordsRouter);
   apiRouter.use('/tasks', tasksRouter);

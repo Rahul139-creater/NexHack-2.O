@@ -17,6 +17,28 @@ import {
 
 export const recordsRouter = Router();
 
+// GET /api/records - list records the caller can read
+recordsRouter.get('/', async (req, res, next) => {
+  try {
+    const records = await Record.find({ readers: req.user.userId }).sort({ updatedAt: -1 });
+    const results = [];
+    for (const r of records) {
+      const rev = await Revision.findOne({ recordId: r.recordId, rev: r.currentRevision });
+      const firstLine = rev?.content?.split('\n')[0]?.replace(/^#+\s*/, '') || '';
+      results.push({
+        recordId: r.recordId,
+        type: r.type,
+        currentRevision: r.currentRevision,
+        title: firstLine,
+        updatedAt: r.updatedAt
+      });
+    }
+    return res.status(200).json(results);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/records/:id - latest revision + metadata (requires read permission)
 recordsRouter.get('/:id', async (req, res, next) => {
   try {
@@ -48,6 +70,32 @@ recordsRouter.get('/:id', async (req, res, next) => {
       createdAt: revision ? revision.createdAt : record.createdAt,
       updatedAt: record.updatedAt
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/records/:id/revisions - revision history list (ordered)
+recordsRouter.get('/:id/revisions', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const record = await Record.findOne({ recordId: id });
+    if (!record) {
+      throw notFound(`Record ${id} not found`);
+    }
+
+    if (!record.readers.includes(req.user.userId)) {
+      throw forbidden(`User ${req.user.userId} does not have read permission for ${id}`);
+    }
+
+    const revisions = await Revision.find({ recordId: id }).sort({ rev: 1 });
+    const list = revisions.map(r => ({
+      rev: r.rev,
+      author: r.author,
+      tool: r.tool,
+      createdAt: r.createdAt
+    }));
+    return res.status(200).json(list);
   } catch (err) {
     next(err);
   }
