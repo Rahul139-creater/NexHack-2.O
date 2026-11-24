@@ -64,25 +64,27 @@ export function Login({ onLoginSuccess }) {
         </button>
       </div>
 
-      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-          Quick Seed Dev Tokens:
-        </p>
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {devTokens.map((t) => (
-            <button
-              key={t.label}
-              className="filter-chip"
-              onClick={() => {
-                setToken(t.token);
-                handleLogin(t.token);
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+      {import.meta.env.DEV && (
+        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            Quick Seed Dev Tokens (Local Development Only):
+          </p>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {devTokens.map((t) => (
+              <button
+                key={t.label}
+                className="filter-chip"
+                onClick={() => {
+                  setToken(t.token);
+                  handleLogin(t.token);
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
