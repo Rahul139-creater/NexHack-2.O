@@ -1,4 +1,5 @@
 import path from 'path';
+import mongoose from 'mongoose';
 import { spawn } from 'child_process';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { createApp } from '../server/src/app.js';
@@ -159,6 +160,8 @@ export async function runKillResumeDemo() {
 
   server.close();
   await mongo.stop();
+  await mongoose.disconnect();
+  process.exit(0);
 
   if (totalResults !== 1 || appliedResults !== 1 || completionEvents !== 1 || resume2.task.status !== 'completed') {
     console.error('\n❌ KILL & RESUME DEMO FAILED!');

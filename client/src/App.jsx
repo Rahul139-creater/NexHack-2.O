@@ -1,71 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { api, getStoredToken, setStoredToken } from './api.js';
-import { Navbar } from './components/Navbar.jsx';
-import { Login } from './components/Login.jsx';
-import { TasksView } from './components/TasksView.jsx';
-import { RecordsView } from './components/RecordsView.jsx';
-import { FlagsView } from './components/FlagsView.jsx';
-import { AuditView } from './components/AuditView.jsx';
-import { TraceView } from './components/TraceView.jsx';
+import React, { useState } from 'react';
+import { useAuth } from './context/AuthContext.jsx';
+import { Navbar } from './components/layout/Navbar.jsx';
+import { HeaderStats } from './components/layout/HeaderStats.jsx';
+import { Toast } from './components/layout/Toast.jsx';
+import { Login } from './components/auth/Login.jsx';
+import { TasksView } from './components/tasks/TasksView.jsx';
+import { RecordsView } from './components/records/RecordsView.jsx';
+import { FlagsView } from './components/flags/FlagsView.jsx';
+import { TraceView } from './components/trace/TraceView.jsx';
+import { AuditView } from './components/audit/AuditView.jsx';
+import { DemoSimulatorView } from './components/simulator/DemoSimulatorView.jsx';
 
 export function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { currentUser, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('tasks');
-  const [loading, setLoading] = useState(true);
-  const [traceTaskId, setTraceTaskId] = useState('');
+  const [traceTaskId, setTraceTaskId] = useState('TSK-001');
   const [targetRecord, setTargetRecord] = useState(null);
+  const [statsTrigger, setStatsTrigger] = useState(0);
 
-  useEffect(() => {
-    async function checkAuth() {
-      const token = getStoredToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const user = await api.getMe();
-        setCurrentUser(user);
-      } catch (err) {
-        setStoredToken('');
-        setCurrentUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-    checkAuth();
-  }, []);
-
-  function handleLogout() {
-    setStoredToken('');
-    setCurrentUser(null);
-    setActiveTab('tasks');
+  function triggerRefresh() {
+    setStatsTrigger((prev) => prev + 1);
   }
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Loading Team KB Harness...</p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        gap: '12px'
+      }}>
+        <div style={{
+          width: '36px',
+          height: '36px',
+          border: '3px solid rgba(56, 189, 248, 0.2)',
+          borderTopColor: 'var(--accent-cyan)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          Initializing Team KB Harness...
+        </p>
       </div>
     );
   }
 
   if (!currentUser) {
-    return <Login onLoginSuccess={(user) => setCurrentUser(user)} />;
+    return <Login />;
   }
 
   return (
-    <div>
+    <div className="app-wrapper">
+      <div className="app-bg-glow" />
+
+      {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={(tab) => {
           setActiveTab(tab);
           if (tab !== 'records') setTargetRecord(null);
         }}
-        currentUser={currentUser}
-        onLogout={handleLogout}
       />
 
-      <main className="container">
+      {/* Main Workspace */}
+      <main className="main-container">
+        {/* Top Metric Ribbon */}
+        <HeaderStats refreshTrigger={statsTrigger} />
+
+        {/* Tab Routing */}
         {activeTab === 'tasks' && (
           <TasksView
             onViewTrace={(id) => {
@@ -88,7 +92,6 @@ export function App() {
 
         {activeTab === 'flags' && (
           <FlagsView
-            currentUser={currentUser}
             onViewTrace={(id) => {
               setTraceTaskId(id);
               setActiveTab('trace');
@@ -96,12 +99,27 @@ export function App() {
           />
         )}
 
-        {activeTab === 'audit' && <AuditView />}
-
         {activeTab === 'trace' && (
           <TraceView initialTaskId={traceTaskId} />
         )}
+
+        {activeTab === 'audit' && (
+          <AuditView />
+        )}
+
+        {activeTab === 'simulator' && (
+          <DemoSimulatorView
+            onViewTrace={(id) => {
+              setTraceTaskId(id);
+              setActiveTab('trace');
+            }}
+            onRefreshAll={triggerRefresh}
+          />
+        )}
       </main>
+
+      {/* Global Toast System */}
+      <Toast />
     </div>
   );
 }
